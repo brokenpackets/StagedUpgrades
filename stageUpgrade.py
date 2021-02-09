@@ -12,17 +12,6 @@ csvfilename = 'inventory.csv'
 image = 'EOS-4.25.1F.swi'
 vrf = 'MGMT'
 
-"""
-Python script to stage EOS images to upgrade devices at a later time. 
-
-Change server_ips to your CVP server(s) (ip preferably) in list format.
-Change image to your desired EOS image version name. Must already be imported into CVP.
-Change vrf to the VRF you'd like to use for the install command to reach CVP. Can be 'default' if no VRF desired.
-
-Outputs to stdout, but also saves a digest to a csv file called inventory.csv in the working directory.
-"""
-
-
 connect_timeout = 10
 headers = {"Accept": "application/json",
            "Content-Type": "application/json"}
@@ -52,6 +41,13 @@ def run_upgrade(device,username,password,serverIP,image):
     hostname = ss.runCmds( 1, ['enable','cli vrf %s' % vrf,'install source https://%s/cvpservice/image/getImagebyId/%s' % (serverIP,image)])
     output = hostname[1]
     return output
+
+def validate_upgrade(device,username,password,serverIP,image):
+    url = "https://%s:%s@%s/command-api" % (username, password, device)
+    ss = Server(url)
+    #CONNECT TO DEVICE
+    bootVer = ss.runCmds( 1, ['enable','show boot'])[1]['softwareImage']
+    return bootVer
 
 with open(csvfilename,'w+') as f:
     f.close()
@@ -86,8 +82,13 @@ for server in server_ips:
                   print '     |____Upgrade Succeeded on '+hostname+'.'
                   f.write('Upgraded\n')
               except:
-                  print '     |____Upgrade Failed on '+hostname+'. Out of disk space?'
-                  f.write('Failed\n')
+                  bootfile = validate_upgrade(ipAddress,username,password,server,image)
+                  if bootfile.endswith(image):
+                      print '     |____Upgrade Succeeded on '+hostname+'.'
+                      f.write('Upgraded\n')
+                  else:
+                      print '     |____Upgrade Failed on '+hostname+'. Out of disk space?'
+                      f.write('Failed\n')
           else:
               if switch['ztpMode'] == 'true':
                   print '|____Device '+hostname+' is in ZTP mode. Skipping.'
