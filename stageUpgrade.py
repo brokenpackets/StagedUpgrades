@@ -78,9 +78,14 @@ for server in server_ips:
           if streamingStatus == 'active':
               print '|____Running Upgrade on '+hostname
               try:
-                  output = run_upgrade(ipAddress,username,password,server,image)
-                  print '     |____Upgrade Succeeded on '+hostname+'.'
-                  f.write('Upgraded\n')
+                  prebootfile = validate_upgrade(ipAddress,username,password,server,image)
+                  if prebootfile.endswith(image):
+                      print '     |____Upgrade Succeeded on '+hostname+'.'
+                      f.write('Upgraded\n')
+                  else:
+                      output = run_upgrade(ipAddress,username,password,server,image)
+                      print '     |____Upgrade Succeeded on '+hostname+'.'
+                      f.write('Upgraded\n')
               except:
                   bootfile = validate_upgrade(ipAddress,username,password,server,image)
                   if bootfile.endswith(image):
