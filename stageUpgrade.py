@@ -5,6 +5,19 @@ from jsonrpclib import Server
 import ssl
 import getpass
 
+'''
+Logs into CVP server(s) (`server_ips` list), pulls down the inventory, and then 
+attempts to upgrade all currently active devices to the image specified in `image` var.
+
+server_ips - list of cvp servers to run against.
+image - the image you'd like to stage. This uses the install source command, which will place the image in the boot-config.
+vrf - the vrf to source the `install source` from. Use 'default' for no vrf.
+
+On completion, there will be a csv file in the working directory with the results. You can re-run this script again 
+if any upgrades failed (disk space most likely), and it will skip pushing to the device as long as the image already exists.
+'''
+
+
 username = raw_input("Enter your username:\n")
 password = getpass.getpass()
 server_ips = ['192.168.255.50']
